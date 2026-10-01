@@ -8,11 +8,13 @@
 typedef double MY_TYPE;
 
 #define POISON (MY_TYPE)3802
+#define MXLN 300
+
+// #define STACK_DEBUG // РАССКОМЕНТИТЬ ДЛЯ РЕЖИМА ДЕБАГА
+// ИЛИ ИСПОЛЬЗОВАТЬ ФЛАГ -D STACK_DEBUG
 
 #ifdef STACK_DEBUG
 #define ON_DBG(...) __VA_ARGS__
-// #define ON_DBG(x, ...) x, ...
-// #define ON_DBG(x) x
 #else
 #define ON_DBG(...)
 #endif
@@ -45,21 +47,11 @@ const char* errors[] { // написать ошибки по уровням: inf
 // TODO: сделать чтобы в дамп передавало причину дампа необязательным параметром
 // TODO: stack verify - разбить на несколько условий и вызывать дампы по разным причинам, писать в дамп причину вызова
 // TODO: канареечная защита самой структуры, класть с начала и с конца структуры
-// TODO: добвить в дамп информацию о структуре, которая собирается в режиме ON_DBG
+// TODO: добавить в дамп информацию о структуре, которая собирается в режиме ON_DBG
 // TODO: в функции инициализации проинициализировать значения
 // АССЕРТ ЛЕТИТ НА ФУНКЦИИ ПОП
 
 // UNIT TEST-ы ДЛЯ СТЕКА
-
-// NDEBUG отменяет все assert
-// define STACK_DEBUG
-// #ifdef STACK_DEBUG
-// ... - ниже действия и объявления в режиме дебага, например, запись в структуру информации о ней (где, как, кем создана)
-// #endif вроде надо написать
-
-// #define STACK_DEBUG // РАССКОМЕНТИТЬ ДЛЯ РЕЖИМА ДЕБАГА ИЛИ ИСПОЛЬЗОВАТЬ ФЛАГ
-// -D STACK_DEBUG в компиляторе флаг чтообы задефайнить
-
 
 struct stack_t {
     MY_TYPE* data;
@@ -70,10 +62,9 @@ struct stack_t {
     int line;)
 };
 
-// тогда в режиме дебага заменится на дебажную версию, иначе просто останется пустота
-
 
 #include "log.c"
+
 
 int main() {
     log_start();
@@ -104,15 +95,17 @@ int main() {
     printf("%f\n", last_el);
 
     for(int i = 1; i < 12; ++i) {
+
         Push(&stk1, (MY_TYPE)i, &err);
         stk_verify(&stk1, err);
-        ON_DBG(Dump(&stk1, err);)
+        ON_DBG(Dump(&stk1, err, "Debugging in pushing");)
+
     }
     for(int i = 0; i < 10; ++i) {
         MY_TYPE sec_last = Pop(&stk1, &err);
 
         printf("%f\n", sec_last);
-        ON_DBG(Dump(&stk1, err);)
+        ON_DBG(Dump(&stk1, err, "Debugging in popping");)
     }
 
     MY_TYPE almost_last = Top(&stk1, &err);
@@ -120,7 +113,7 @@ int main() {
 
     stk_destroy(&stk1);
 
-    ON_DBG(Dump(&stk1, err);)
+    ON_DBG(Dump(&stk1, err, "Debugging after destroying");)
 
     log_end();
     return 0;
@@ -137,13 +130,14 @@ void stk_verify(struct stack_t* stk, int err) {
         Dump(stk, err, "negative capacity of stack\n");
 
     if(stk -> size > stk -> capacity)
-        Dump(stk, err, "stack size is more than capacity");
-
+        Dump(stk, err, "stack size is more than capacity\n");
+    /*
     if(stk -> data[-1] != NAN)
-        Dump(stk, err, "Something wrong with LEFT canary");
+        Dump(stk, err, "Something wrong with LEFT canary\n");
 
     if(stk -> data[stk -> capacity - 1] != NAN)
-        Dump(stk, err, "Something wrong with RIGHT canary");
+        Dump(stk, err, "Something wrong with RIGHT canary\n");
+    */
 }
 
 void init_stk(struct stack_t* stk, size_t len, int* err
@@ -177,52 +171,89 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
 
     static int num = 1;
 
-    printf("\n\e[0;36m    === It is Dump number %d. ===\n\n\e[0m", num++);
+    // static char* buf = (char*)calloc(MXLN, sizeof(char));
+    char buf[MXLN] = {};
 
-    va_list reason; // печать необязательной строки, идёт не так, как задумано
-    char* txt = NULL;
+    sprintf(buf,"\n    === It is Dump number %d. ===\n\n", num++);
+    log_write_print(buf, YELLOW_TEXT);
+    // free(buf);
+
+    va_list reason;
     va_start(reason, err);
+
+    const char* text = va_arg(reason, const char*);
+    sprintf(buf, "    %s\n", text);
+    log_write_print(buf, GREEN_TEXT);
+
+    va_end(reason);
+
+    /*
+    va_list reason; // печать необязательной строки, идёт не так, как задумано
+    // char* txt = NULL;
+    va_start(reason, err);
+    sprintf(buf, "%s\n", reason);
+    log_write_print(buf, RED_TEXT);
+    /*
     for(char* c = reason; *c; ++c) {
         printf("%c", c);
     }
-    putchar('\n');
+    putchar('\n'); */
 
-    printf("\e[0;33m\tError number is %2d\n\n\t%s\n\n"
+    sprintf(buf, "\tError number is %2d\n\n\t%s\n\n"
     "\tCapacity: %8d\n\n"
     "\tSize: %12d\n\n",
     err, errors[err], stk -> capacity, stk -> size);
+    log_write_print(buf, YELLOW_TEXT);
 
     ON_DBG(
 
-    printf("    \e[0;31mDBG MODE:\n\n    Name of stack is %s\n\n"
+    sprintf(buf, "    DBG MODE:\n\n    Name of stack is %s\n\n"
     "    It was created in file %s\n\n"
-    "    In line number: %d\n\n\e[0m"
+    "    In line number: %d\n\n"
     , stk -> name, stk -> file, stk -> line);
+    log_write_print(buf, RED_TEXT);
 
     )
 
-    printf("\e[0;33m\tCurrent stack:\n\n\e[0m");
+    sprintf(buf, "\tCurrent stack:\n\n");
+    log_write_print(buf, YELLOW_TEXT);
 
     // log_write_print("\n    === It is Dump number %d. ===\n\n")
 
     // PRINTING ELEMENTS
     if(stk -> data == NULL && stk -> size == 0 && stk -> capacity == 0) {
-        printf("\e[0;35m\tIt is an empty stack, after initialising or destroying.\n");
-        // log_write_print("\tIt is an empty stack, after initialising or destroying.\n", CIAN_TEXT);
+
+        sprintf(buf, "\tIt is an empty stack, after initialising or destroying.\n");
+        log_write_print(buf, PURPLE_TEXT);
+
     } else {
         for(int i = 0; i < stk -> capacity; ++i) {
             if(i < stk -> size) {
+
                 if(stk -> data[i] == POISON) {
-                    printf("\e[0;34m\t* [%d] %f\n\e[0m", i, stk -> data[i]);
+
+                    sprintf(buf, "\t* [%d] %f\n", i, stk -> data[i]);
+                    log_write_print(buf, RED_TEXT);
+
                 } else {
-                    printf("\e[0;32m\t* [%d] %f\n\e[0m", i, stk -> data[i]);
+
+                    sprintf(buf, "\t* [%d] %f\n", i, stk -> data[i]);
+                    log_write_print(buf, GREEN_TEXT);
+
                 }
             }
             else {
+
                 if(stk -> data[i] == POISON) {
-                    printf("\e[0;34m\t* [%d] %f\n\e[0m", i, stk -> data[i]);
+
+                    sprintf(buf, "\t[%d] %f\n", i, stk -> data[i]);
+                    log_write_print(buf, BLUE_TEXT);
+
                 } else {
-                    printf("\e[0;32m\t* [%d] %f\n\e[0m", i, stk -> data[i]);
+
+                    sprintf(buf, "\t[%d] %f\n", i, stk -> data[i]);
+                    log_write_print(buf, RED_TEXT);
+
                 }
             }
         }
