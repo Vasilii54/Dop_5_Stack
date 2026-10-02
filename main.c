@@ -9,8 +9,10 @@ typedef double MY_TYPE;
 
 #define POISON (MY_TYPE)3802
 #define MXLN 300
+#define LEFT_PIGEON (MY_TYPE)0xEBADEDA
+#define RIGHT_PIGEON (MY_TYPE)0xCAFEBABE
 
-// #define STACK_DEBUG // РАССКОМЕНТИТЬ ДЛЯ РЕЖИМА ДЕБАГА
+// #define STACK_DEBUG // РАССКОММЕНТИТЬ ДЛЯ РЕЖИМА ДЕБАГА
 // ИЛИ ИСПОЛЬЗОВАТЬ ФЛАГ -D STACK_DEBUG
 
 #ifdef STACK_DEBUG
@@ -22,7 +24,7 @@ typedef double MY_TYPE;
 #define GET_VAR_NAME(var) #var
 
 void init_stk(struct stack_t* stk, size_t len, int* err
-              ON_DBG(, const char* name, const char* file, int line));
+            ON_DBG(, const char* name, const char* file, int line));
 
 void Dump(struct stack_t* stk, int err, ...);
 
@@ -37,7 +39,7 @@ MY_TYPE Top(struct stack_t* stk, int* err);
 void stk_destroy(struct stack_t* stk);
 
 const char* errors[] { // написать ошибки по уровням: info, debuf warning, error, fatal
-                       // только fatal должен вызывать abort()
+                    // только fatal должен вызывать abort()
     "Everything is OK",
     "Not defined right now",
     "You are deleting from empty stack"
@@ -51,15 +53,16 @@ const char* errors[] { // написать ошибки по уровням: inf
 // TODO: в функции инициализации проинициализировать значения
 // АССЕРТ ЛЕТИТ НА ФУНКЦИИ ПОП
 
-// UNIT TEST-ы ДЛЯ СТЕКА
+// TODO: UNIT TEST-ы ДЛЯ СТЕКА
 
 struct stack_t {
     MY_TYPE* data;
-    int size;
-    int capacity;
+    MY_TYPE* array;
+    size_t size;
+    size_t capacity;
     ON_DBG(const char* name;
     const char* file;
-    int line;)
+    unsigned long long int line;)
 };
 
 
@@ -76,32 +79,26 @@ int main() {
     init_stk(&stk1, len, &err ON_DBG(, GET_VAR_NAME(stk1), __FILE__, __LINE__));
     stk_verify(&stk1, err);
 
-    // Dump(&stk1, err, &num, errors);
+    // Dump(&stk1, err, "");
 
     Push(&stk1, 11.1, &err);
     stk_verify(&stk1, err);
 
-    // Dump(&stk1, err, &num, errors);
-
     Push(&stk1, 22.2, &err);
     stk_verify(&stk1, err);
 
-    // Dump(&stk1, err, &num, errors);
-
     MY_TYPE last_el = Pop(&stk1, &err);
-
-    // Dump(&stk1, err, &num, errors);
 
     printf("%f\n", last_el);
 
-    for(int i = 1; i < 12; ++i) {
+    for(int i = 1; i < 18; ++i) {
 
         Push(&stk1, (MY_TYPE)i, &err);
         stk_verify(&stk1, err);
         ON_DBG(Dump(&stk1, err, "Debugging in pushing");)
 
     }
-    for(int i = 0; i < 10; ++i) {
+    for(int i = 0; i < 15; ++i) {
         MY_TYPE sec_last = Pop(&stk1, &err);
 
         printf("%f\n", sec_last);
@@ -110,6 +107,8 @@ int main() {
 
     MY_TYPE almost_last = Top(&stk1, &err);
     printf("%f\n", almost_last);
+
+    // Dump(&stk1, err, "");
 
     stk_destroy(&stk1);
 
@@ -131,13 +130,13 @@ void stk_verify(struct stack_t* stk, int err) {
 
     if(stk -> size > stk -> capacity)
         Dump(stk, err, "stack size is more than capacity\n");
-    /*
-    if(stk -> data[-1] != NAN)
+
+    if(*(stk -> array) != LEFT_PIGEON)
         Dump(stk, err, "Something wrong with LEFT canary\n");
 
-    if(stk -> data[stk -> capacity - 1] != NAN)
+    if(stk -> data[stk -> capacity] != RIGHT_PIGEON)
         Dump(stk, err, "Something wrong with RIGHT canary\n");
-    */
+
 }
 
 void init_stk(struct stack_t* stk, size_t len, int* err
@@ -154,16 +153,18 @@ void init_stk(struct stack_t* stk, size_t len, int* err
 
     if(stk -> size != 0 || stk -> capacity != 0) *err = 1;
 
-    // stk -> data = (MY_TYPE*)calloc(len + 2, sizeof(MY_TYPE)); // + 2 для канареек
-    stk -> data = (MY_TYPE*)calloc(len, sizeof(MY_TYPE));
-    /*
-    stk -> data[0] = NAN;
-    stk -> data[len + 1] = NAN;
-    stk -> data += 1;
-    */
+    stk -> array = (MY_TYPE*)calloc(len + 2, sizeof(MY_TYPE)); // + 2 для канареек
+    // stk -> data = (MY_TYPE*)calloc(len, sizeof(MY_TYPE));
+    assert(stk -> array != NULL);
+    ///*
+    stk -> array[0] = LEFT_PIGEON;
+    stk -> array[len + 1] = RIGHT_PIGEON;
+    stk -> data = stk -> array + 1;
+    //*/
     stk -> capacity = len;
     stk -> size = 0;
 
+    assert(stk -> array != NULL);
     assert(stk -> data != NULL);
 }
 
@@ -174,7 +175,7 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
     // static char* buf = (char*)calloc(MXLN, sizeof(char));
     char buf[MXLN] = {};
 
-    sprintf(buf,"\n    === It is Dump number %d. ===\n\n", num++);
+    sprintf(buf,"\n    === It is Dump number %d. ===\n", num++);
     log_write_print(buf, YELLOW_TEXT);
     // free(buf);
 
@@ -186,18 +187,6 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
     log_write_print(buf, GREEN_TEXT);
 
     va_end(reason);
-
-    /*
-    va_list reason; // печать необязательной строки, идёт не так, как задумано
-    // char* txt = NULL;
-    va_start(reason, err);
-    sprintf(buf, "%s\n", reason);
-    log_write_print(buf, RED_TEXT);
-    /*
-    for(char* c = reason; *c; ++c) {
-        printf("%c", c);
-    }
-    putchar('\n'); */
 
     sprintf(buf, "\tError number is %2d\n\n\t%s\n\n"
     "\tCapacity: %8d\n\n"
@@ -218,15 +207,17 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
     sprintf(buf, "\tCurrent stack:\n\n");
     log_write_print(buf, YELLOW_TEXT);
 
-    // log_write_print("\n    === It is Dump number %d. ===\n\n")
-
     // PRINTING ELEMENTS
-    if(stk -> data == NULL && stk -> size == 0 && stk -> capacity == 0) {
+    if(stk -> data == NULL && stk -> array == NULL && stk -> size == 0 && stk -> capacity == 0) {
 
         sprintf(buf, "\tIt is an empty stack, after initialising or destroying.\n");
         log_write_print(buf, PURPLE_TEXT);
 
     } else {
+
+        sprintf(buf, "\tLeft pigeon: %X\n", *(stk -> array));
+        log_write_print(buf, BLUE_TEXT);
+
         for(int i = 0; i < stk -> capacity; ++i) {
             if(i < stk -> size) {
 
@@ -257,6 +248,10 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
                 }
             }
         }
+
+        sprintf(buf, "\tRight pigeon: %X\n", stk -> data[stk -> capacity]);
+        log_write_print(buf, BLUE_TEXT);
+
     }
     printf("\n\e[0;36m    === End of Dump function. ===\n\n\e[0m");
 }
@@ -264,13 +259,20 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
 void Push(struct stack_t* stk, MY_TYPE elem, int* err) {
 
     if(stk -> size >= stk -> capacity) {
-        int old = stk -> capacity;
-        // stk -> capacity *= 1.5;
-        stk -> data = (MY_TYPE*)realloc(stk -> data, (stk -> capacity *= 1.5) * sizeof(MY_TYPE));
+        size_t new_cap = (stk -> capacity) + (stk -> capacity) / 2;
+        size_t old = stk -> capacity;
 
+        stk -> array = (MY_TYPE*)realloc(stk -> array, (new_cap + 2) * sizeof(MY_TYPE));
+
+        assert(stk -> array != NULL);
         assert(stk -> data != NULL);
 
+        stk -> capacity = new_cap;
+
+        stk -> data = stk -> array + 1;
+
         memset(stk -> data + old, 0, (stk -> capacity - old) * sizeof(MY_TYPE));
+        stk->array[stk -> capacity + 1] = RIGHT_PIGEON;
     }
 
     stk -> data[stk -> size++] = elem;
@@ -280,7 +282,8 @@ void Push(struct stack_t* stk, MY_TYPE elem, int* err) {
 MY_TYPE Pop(struct stack_t* stk, int* err) {
     if(stk -> size == 0) {
         *err = 2;
-        Dump(stk, *err);
+        Dump(stk, *err, "Popping from empty stack");
+        return NAN;
     }
 
     stk -> size--;
@@ -293,14 +296,20 @@ MY_TYPE Pop(struct stack_t* stk, int* err) {
         assert(stk -> data != NULL);
         // assert(stk -> capacity > 0);
 
-        stk -> data = (MY_TYPE*)realloc(stk -> data, (stk -> capacity /= 2) * sizeof(MY_TYPE));
+        size_t new_cap = (stk -> capacity) / 2 + 2;
 
-        MY_TYPE* wtf = stk -> data;
-        // printf("%p\n", wtf);
+        stk -> array = (MY_TYPE*)realloc(stk -> array, (new_cap + 2) * sizeof(MY_TYPE));
+
+        stk -> capacity = new_cap;
+
+        stk -> data = stk -> array + 1;
 
         // assert((stk -> capacity *= 0.5) != 0);
-
+        assert(stk -> array != NULL);
         assert(stk -> data != NULL);
+
+        stk -> array[0] = LEFT_PIGEON;
+        stk -> array[stk->capacity + 1] = RIGHT_PIGEON;
     }
 
     return elem;
@@ -309,7 +318,8 @@ MY_TYPE Pop(struct stack_t* stk, int* err) {
 MY_TYPE Top(struct stack_t* stk, int* err) {
     if(stk -> size == 0) {
         *err = 2;
-        Dump(stk, *err);
+        Dump(stk, *err, "Stack is empty but you want to get top element");
+        return NAN;
     }
 
     MY_TYPE elem = stk -> data[stk -> size - 1];
@@ -318,8 +328,9 @@ MY_TYPE Top(struct stack_t* stk, int* err) {
 }
 
 void stk_destroy(struct stack_t* stk) {
-    free(stk -> data - 1);
+    free(stk -> array);
     stk -> data = NULL;
+    stk -> array = NULL;
     stk -> size = 0;
     stk -> capacity = 0;
 }
