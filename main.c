@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+
+// #define NDEBUG // ИЛИ ИСПОЛЬЗОВАТЬ ФЛАГ -D NDEBUG чтобы отключить asserts
+#include <assert.h>
 
 typedef double MY_TYPE;
 
@@ -24,11 +26,11 @@ typedef double MY_TYPE;
 #define GET_VAR_NAME(var) #var
 
 void init_stk(struct stack_t* stk, size_t len, int* err
-            ON_DBG(, const char* name, const char* file, int line));
+              ON_DBG(, const char* name, const char* file, int line, const char* func));
 
-void Dump(struct stack_t* stk, int err, ...);
+void Dump(struct stack_t* stk, int* err, ...);
 
-void stk_verify(struct stack_t* stk, int err);
+void stk_verify(struct stack_t* stk, int* err);
 
 void Push(struct stack_t* stk, MY_TYPE elem, int* err);
 
@@ -40,20 +42,28 @@ void stk_destroy(struct stack_t* stk);
 
 const char* errors[] { // написать ошибки по уровням: info, debuf warning, error, fatal
                     // только fatal должен вызывать abort()
-    "Everything is OK",
-    "Not defined right now",
-    "You are deleting from empty stack"
+    "info: Everything is OK",
+    "warning: Not defined right now",
+    "error: You are deleting from empty stack",
+    "error: negative len of stack in initialising",
+    "warning: your stack size is zero. Is it normal?",
+    "fatal: "
 };
-
-// TODO: цветной вывод в Dump, VA ARGS в Dump, гистерезис, static переменные -
-// TODO: сделать чтобы в дамп передавало причину дампа необязательным параметром
-// TODO: stack verify - разбить на несколько условий и вызывать дампы по разным причинам, писать в дамп причину вызова
-// TODO: канареечная защита самой структуры, класть с начала и с конца структуры
-// TODO: добавить в дамп информацию о структуре, которая собирается в режиме ON_DBG
-// TODO: в функции инициализации проинициализировать значения
-// АССЕРТ ЛЕТИТ НА ФУНКЦИИ ПОП
-
+/* Already done:
+    TODO: цветной вывод в Dump, VA ARGS в Dump, гистерезис, static переменные -
+    TODO: сделать чтобы в дамп передавало причину дампа необязательным параметром
+    TODO: stack verify - разбить на несколько условий и вызывать дампы по разным причинам, писать в дамп причину вызова
+    TODO: канареечная защита самой структуры, класть с начала и с конца структуры
+    TODO: добавить в дамп информацию о структуре, которая собирается в режиме ON_DBG
+    TODO: в функции инициализации проинициализировать значения
+*/
 // TODO: UNIT TEST-ы ДЛЯ СТЕКА
+// TODO: хэшированную защиту, хеш для данных и хеш для стека.
+// TODO: нарочно сломать стек и посмотреть, будет ли выявлена ошибка.
+
+// TODO: починить __FUNCTION__
+
+#include "log.c"
 
 struct stack_t {
     MY_TYPE* data;
@@ -62,65 +72,96 @@ struct stack_t {
     size_t capacity;
     ON_DBG(const char* name;
     const char* file;
-    unsigned long long int line;)
+    unsigned long long int line;
+    const char* func;)
 };
-
-
-#include "log.c"
-
 
 int main() {
     log_start();
+    int err = 0;
 
     stack_t stk1 = {};
-    int err = 0;
     size_t len = 5;
 
-    init_stk(&stk1, len, &err ON_DBG(, GET_VAR_NAME(stk1), __FILE__, __LINE__));
-    stk_verify(&stk1, err);
+    init_stk(&stk1, len, &err ON_DBG(, GET_VAR_NAME(stk1), __FILE__, __LINE__, __FUNCTION__));
+    stk_verify(&stk1, &err);
 
     // Dump(&stk1, err, "");
 
     Push(&stk1, 11.1, &err);
-    stk_verify(&stk1, err);
+    stk_verify(&stk1, &err);
 
     Push(&stk1, 22.2, &err);
-    stk_verify(&stk1, err);
+    stk_verify(&stk1, &err);
 
     MY_TYPE last_el = Pop(&stk1, &err);
 
     printf("%f\n", last_el);
 
-    for(int i = 1; i < 18; ++i) {
+    for(int i = 1; i < 3; ++i) {
 
         Push(&stk1, (MY_TYPE)i, &err);
-        stk_verify(&stk1, err);
-        ON_DBG(Dump(&stk1, err, "Debugging in pushing");)
+        stk_verify(&stk1, &err);
+        ON_DBG(Dump(&stk1, &err, "Debugging in pushing");)
 
     }
-    for(int i = 0; i < 15; ++i) {
+    for(int i = 0; i < 2; ++i) {
         MY_TYPE sec_last = Pop(&stk1, &err);
 
         printf("%f\n", sec_last);
-        ON_DBG(Dump(&stk1, err, "Debugging in popping");)
+        ON_DBG(Dump(&stk1, &err, "Debugging in popping");)
     }
 
     MY_TYPE almost_last = Top(&stk1, &err);
     printf("%f\n", almost_last);
 
-    // Dump(&stk1, err, "");
+    // Dump(&stk1, &err, "");
+
+    ON_DBG(Dump(&stk1, &err, "Debugging before destroying");)
 
     stk_destroy(&stk1);
 
-    ON_DBG(Dump(&stk1, err, "Debugging after destroying");)
+    ON_DBG(Dump(&stk1, &err, "Debugging after destroying");)
+
+
+    printf("\n   !!!   NORMAL WORK IS OWER. NOW LET`S BREAK STACK   !!!   \n\n");
+
+
+    stack_t stk2 = {};
+    size_t len2 = 0;
+    // printf("%zd %zu\n", len2, len2);
+    init_stk(&stk2, len2, &err ON_DBG(, GET_VAR_NAME(stk2), __FILE__, __LINE__, __FUNCTION__));
+    stk_verify(&stk2, &err);
+
+    stk2.size = -1;
+    stk_verify(&stk2, &err);
+
+    stk2.size = 0;
+
+    Push(&stk2, 333.33, &err);
+    Pop(&stk2, &err);
+    Pop(&stk2, &err);
+
+    stk2.data[-1] = 0xA4A4A;
+    stk2.data[stk2.capacity] = 67;
+    stk_verify(&stk2, &err);
+
+
 
     log_end();
     return 0;
 }
+
 // разбить все эти причины по одиночке и менять ошибки, вызывать дамп по разным причинам
-void stk_verify(struct stack_t* stk, int err) {
-    if(err != 0)
+void stk_verify(struct stack_t* stk, int* err) {
+    if(*err != 0)
         Dump(stk, err, "called because error\n");
+
+    if(stk -> data == NULL)
+        Dump(stk, err, "data pointer is NULL\n");
+
+    if(stk -> array == NULL)
+        Dump(stk, err, "array pointer is NULL\n");
 
     if(stk -> size < 0)
         Dump(stk, err, "negative size of stack\n");
@@ -140,13 +181,24 @@ void stk_verify(struct stack_t* stk, int err) {
 }
 
 void init_stk(struct stack_t* stk, size_t len, int* err
-              ON_DBG(, const char* name, const char* file, int line)) {
+              ON_DBG(, const char* name, const char* file, int line, const char* func)) {
 
     ON_DBG(
-    stk -> name = name;
-    stk -> file = file;
-    stk -> line = line;
+        stk -> name = name;
+        stk -> file = file;
+        stk -> line = line;
+        stk -> func = func;
     )
+
+    if(len < 0) {
+        // *err = 3;
+        Dump(stk, err, "Negative stack length in initialising\n");
+        return;
+    }
+    else if(len == 0) {
+        // *err = 4;
+        ON_DBG(Dump(stk, err, "In initialisation length of stack data is zero\n"));
+    }
 
     assert(stk);
     assert(err);
@@ -168,7 +220,7 @@ void init_stk(struct stack_t* stk, size_t len, int* err
     assert(stk -> data != NULL);
 }
 
-void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем лучше
+void Dump(struct stack_t* stk, int* err, ...) { // чем красивее тем лучше
 
     static int num = 1;
 
@@ -189,9 +241,9 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
     va_end(reason);
 
     sprintf(buf, "\tError number is %2d\n\n\t%s\n\n"
-    "\tCapacity: %8d\n\n"
-    "\tSize: %12d\n\n",
-    err, errors[err], stk -> capacity, stk -> size);
+    "\tCapacity: %8zu\n\n"
+    "\tSize: %12zu\n\n",
+    *err, errors[*err], stk -> capacity, stk -> size);
     log_write_print(buf, YELLOW_TEXT);
 
     ON_DBG(
@@ -199,7 +251,8 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
     sprintf(buf, "    DBG MODE:\n\n    Name of stack is %s\n\n"
     "    It was created in file %s\n\n"
     "    In line number: %d\n\n"
-    , stk -> name, stk -> file, stk -> line);
+    "    In function: %s\n\n"
+    , stk -> name, stk -> file, stk -> line, stk -> func);
     log_write_print(buf, RED_TEXT);
 
     )
@@ -258,6 +311,12 @@ void Dump(struct stack_t* stk, int err, ...) { // чем красивее тем
 
 void Push(struct stack_t* stk, MY_TYPE elem, int* err) {
 
+    if(stk -> capacity == 0) {
+        stk -> capacity = 4;
+        stk -> array = (MY_TYPE*)realloc(stk -> array, stk -> capacity * sizeof(MY_TYPE));
+        stk -> data = stk -> array + 1;
+    }
+
     if(stk -> size >= stk -> capacity) {
         size_t new_cap = (stk -> capacity) + (stk -> capacity) / 2;
         size_t old = stk -> capacity;
@@ -282,7 +341,7 @@ void Push(struct stack_t* stk, MY_TYPE elem, int* err) {
 MY_TYPE Pop(struct stack_t* stk, int* err) {
     if(stk -> size == 0) {
         *err = 2;
-        Dump(stk, *err, "Popping from empty stack");
+        Dump(stk, err, "Popping from empty stack");
         return NAN;
     }
 
@@ -318,7 +377,7 @@ MY_TYPE Pop(struct stack_t* stk, int* err) {
 MY_TYPE Top(struct stack_t* stk, int* err) {
     if(stk -> size == 0) {
         *err = 2;
-        Dump(stk, *err, "Stack is empty but you want to get top element");
+        Dump(stk, err, "Stack is empty but you want to get top element");
         return NAN;
     }
 
