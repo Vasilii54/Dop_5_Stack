@@ -1,0 +1,592 @@
+--- Beginning of log file ---
+    Tests started.
+
+    === It is Dump number 1. ===
+
+    Debugging in pushing
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        4
+
+	Size:            2
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 11.100000
+
+	* [1] 1.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 2. ===
+
+    Debugging in pushing
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        4
+
+	Size:            3
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 11.100000
+
+	* [1] 1.000000
+
+	* [2] 2.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 3. ===
+
+    Debugging in popping
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        4
+
+	Size:            2
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 11.100000
+
+	* [1] 1.000000
+
+	[2] 3802.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 4. ===
+
+    Debugging in popping
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        4
+
+	Size:            1
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 11.100000
+
+	[1] 3802.000000
+
+	[2] 3802.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 5. ===
+
+    Debugging before destroying
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        4
+
+	Size:            1
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 11.100000
+
+	[1] 3802.000000
+
+	[2] 3802.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 6. ===
+
+    Debugging after destroying
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        0
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk1
+
+    It was created in file main.c
+
+    In line number: 98
+
+    In function: main
+
+
+	Current stack:
+
+
+	It is an empty stack, after initialising or destroying.
+
+
+    === It is Dump number 7. ===
+
+    In initialisation length of stack data is zero
+
+
+	Error number is  0
+
+	info: Everything is OK
+
+	Capacity:        0
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk2
+
+    It was created in file main.c
+
+    In line number: 145
+
+    In function: main
+
+
+	Current stack:
+
+
+	It is an empty stack, after initialising or destroying.
+
+
+    === It is Dump number 8. ===
+
+    Popping from empty stack
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk2
+
+    It was created in file main.c
+
+    In line number: 145
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	[0] 3802.000000
+
+	[1] 0.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 9. ===
+
+    called because error
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk2
+
+    It was created in file main.c
+
+    In line number: 145
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: 0
+
+	[0] 3802.000000
+
+	[1] 0.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 0
+
+
+    === It is Dump number 10. ===
+
+    Something wrong with LEFT canary
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk2
+
+    It was created in file main.c
+
+    In line number: 145
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: 0
+
+	[0] 3802.000000
+
+	[1] 0.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 0
+
+
+    === It is Dump number 11. ===
+
+    Something wrong with RIGHT canary
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk2
+
+    It was created in file main.c
+
+    In line number: 145
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: 0
+
+	[0] 3802.000000
+
+	[1] 0.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 0
+
+
+    === It is Dump number 12. ===
+
+    called because error
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            0
+
+
+    DBG MODE:
+
+    Name of stack is stk3
+
+    It was created in file main.c
+
+    In line number: 165
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	[0] 0.000000
+
+	[1] 0.000000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 13. ===
+
+    called because error
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            2
+
+
+    DBG MODE:
+
+    Name of stack is stk3
+
+    It was created in file main.c
+
+    In line number: 165
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 55.330000
+
+	* [1] 378.330000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 14. ===
+
+    HASH IS NOT THE SAME
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            2
+
+
+    DBG MODE:
+
+    Name of stack is stk3
+
+    It was created in file main.c
+
+    In line number: 165
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 67.000000
+
+	* [1] 378.330000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+
+    === It is Dump number 15. ===
+
+    called because error
+
+
+	Error number is  2
+
+	error: You are deleting from empty stack
+
+	Capacity:        4
+
+	Size:            2
+
+
+    DBG MODE:
+
+    Name of stack is stk3
+
+    It was created in file main.c
+
+    In line number: 165
+
+    In function: main
+
+
+	Current stack:
+
+
+	Left pigeon: B4000000
+
+	* [0] 67.000000
+
+	* [1] 378.330000
+
+	[2] 0.000000
+
+	[3] 0.000000
+
+	Right pigeon: 57C00000
+
+-------------------------------
+    --- End of log file ---

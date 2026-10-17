@@ -40,6 +40,8 @@ MY_TYPE Top(struct stack_t* stk, int* err);
 
 void stk_destroy(struct stack_t* stk);
 
+long long hash(MY_TYPE* data, size_t len);
+
 const char* errors[] { // написать ошибки по уровням: info, debuf warning, error, fatal
                     // только fatal должен вызывать abort()
     "info: Everything is OK",
@@ -56,20 +58,19 @@ const char* errors[] { // написать ошибки по уровням: inf
     TODO: канареечная защита самой структуры, класть с начала и с конца структуры
     TODO: добавить в дамп информацию о структуре, которая собирается в режиме ON_DBG
     TODO: в функции инициализации проинициализировать значения
+    TODO: UNIT TEST-ы ДЛЯ СТЕКА
+    TODO: хэшированную защиту, хеш для данных и хеш для стека.
+    TODO: нарочно сломать стек и посмотреть, будет ли выявлена ошибка.
+    TODO: починить __FUNCTION__, адресы в дампе
 */
-// TODO: UNIT TEST-ы ДЛЯ СТЕКА
-// TODO: хэшированную защиту, хеш для данных и хеш для стека.
-// TODO: нарочно сломать стек и посмотреть, будет ли выявлена ошибка.
-
-// TODO: починить __FUNCTION__
-
-#include "log.c"
+#include "./log/log.c"
 
 struct stack_t {
     MY_TYPE* data;
     MY_TYPE* array;
     size_t size;
     size_t capacity;
+    long long hash_res;
     ON_DBG(const char* name;
     const char* file;
     unsigned long long int line;
@@ -133,7 +134,7 @@ int main() {
     init_stk(&stk2, len2, &err ON_DBG(, GET_VAR_NAME(stk2), __FILE__, __LINE__, __FUNCTION__));
     stk_verify(&stk2, &err);
 
-    stk2.size = -1;
+    // stk2.size = -1;
     stk_verify(&stk2, &err);
 
     stk2.size = 0;
@@ -146,7 +147,19 @@ int main() {
     stk2.data[stk2.capacity] = 67;
     stk_verify(&stk2, &err);
 
+    printf("NOW STK NUMBER THREE\n");
 
+    stack_t stk3 = {};
+    size_t len3 = 4;
+    init_stk(&stk3, len3, &err ON_DBG(, GET_VAR_NAME(stk3), __FILE__, __LINE__, __FUNCTION__));
+    stk_verify(&stk3, &err);
+
+    Push(&stk3, 55.33, &err);
+    Push(&stk3, 378.33, &err);
+    stk_verify(&stk3, &err);
+
+    stk3.data[0] = 67;
+    stk_verify(&stk3, &err);
 
     log_end();
     return 0;
@@ -154,6 +167,12 @@ int main() {
 
 // разбить все эти причины по одиночке и менять ошибки, вызывать дамп по разным причинам
 void stk_verify(struct stack_t* stk, int* err) {
+    if(stk -> hash_res == LEFT_PIGEON && stk -> size > 0)
+        stk -> hash_res = hash(stk -> data, stk -> size);
+
+    if(stk -> hash_res != hash(stk -> data, stk -> size))
+        Dump(stk, err, "HASH IS NOT THE SAME\n");
+
     if(*err != 0)
         Dump(stk, err, "called because error\n");
 
@@ -215,6 +234,7 @@ void init_stk(struct stack_t* stk, size_t len, int* err
     //*/
     stk -> capacity = len;
     stk -> size = 0;
+    stk -> hash_res = LEFT_PIGEON;
 
     assert(stk -> array != NULL);
     assert(stk -> data != NULL);
@@ -336,6 +356,7 @@ void Push(struct stack_t* stk, MY_TYPE elem, int* err) {
 
     stk -> data[stk -> size++] = elem;
 
+    stk -> hash_res = hash(stk -> data, stk -> size);
 }
 
 MY_TYPE Pop(struct stack_t* stk, int* err) {
@@ -371,6 +392,8 @@ MY_TYPE Pop(struct stack_t* stk, int* err) {
         stk -> array[stk->capacity + 1] = RIGHT_PIGEON;
     }
 
+    stk -> hash_res = hash(stk -> data, stk -> size);
+
     return elem;
 }
 
@@ -384,6 +407,17 @@ MY_TYPE Top(struct stack_t* stk, int* err) {
     MY_TYPE elem = stk -> data[stk -> size - 1];
 
     return elem;
+}
+
+// https://github.com/paulxcalder/hash_table
+long long hash(MY_TYPE* data, size_t len) {
+    if(len == 0)
+        return LEFT_PIGEON;
+    long long res = 0;
+    for(size_t i = 0; i < len; ++i) {
+        res = ((res << 5) + res) + (long long)data[i];
+    }
+    return res;
 }
 
 void stk_destroy(struct stack_t* stk) {

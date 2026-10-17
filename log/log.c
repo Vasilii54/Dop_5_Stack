@@ -73,7 +73,7 @@ int log_start(void) {
     }
     else {
         assert(log_fp != NULL);
-        fprintf(log_fp, "--- Beginning of log file ---\nTests started.\n");
+        fprintf(log_fp, "--- Beginning of log file ---\n    Tests started.\n");
     }
 
     return 0;
@@ -118,7 +118,7 @@ int log_write_print(char line[], const char color[]) {
  *   @n            Запускает функцию log_write для записи строки с меткой конца лог-файла
  */
 void log_end(void) {
-    char output[] = "-------------------------------\n--- End of log file ---";
+    char output[] = "-------------------------------\n    --- End of log file ---";
     int status = log_write(output);
     if (status == 0) {
         assert (log_fp != NULL);
