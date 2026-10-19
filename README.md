@@ -11,15 +11,32 @@ g++ main.c -D STACK_DEBUG
 для режима дебага. Затем:
 ./a.exe
 
-## Основные функции
+## Основные функции стека
 
-У стека: Init_stk, Push, Pop, Top, stk_destroy 
++ ``void init_stk(struct stack_t* stk, size_t len, int* err
+              ON_DBG(, const char* name, const char* file, int line, const char* func));``
 
-А также: hash, stk_verify, Dump.
++ ``void Push(struct stack_t* stk, MY_TYPE elem, int* err);``
+
++ ``MY_TYPE Pop(struct stack_t* stk, int* err);``
+
++ ``MY_TYPE Top(struct stack_t* stk, int* err);``
+
++ ``void stk_destroy(struct stack_t* stk);``
+
+Это соответственно инициализация стека, добавление и взятие элемента из него, а также копирование верхнего элемента и уничтожение стека (очищение массивов)
 
 ## Какие виды защиты реализованы
 
-Проверка основных элементов структуры стек на корректность, канареечная защита, хешированная защита с алгоритмом djb2: ``long long hash(MY_TYPE* data, size_t len)``.
+Защитные функции:
+
++ ``long long hash(MY_TYPE* data, size_t len);``
+
++ ``void stk_verify(struct stack_t* stk, int* err);``
+
++ ``void Dump(struct stack_t* stk, int* err, ...);``
+
+В этих функциях реализованы: проверка основных элементов структуры стек на корректность, канареечная защита, хешированная защита с алгоритмом djb2: ``long long hash(MY_TYPE* data, size_t len)``.
 
 Ошибки разделены по группам info, warning, error и fatal.
 
