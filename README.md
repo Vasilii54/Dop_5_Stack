@@ -5,11 +5,16 @@
 ## Как запустить
 
 Run:
-g++ main.c
+
+``g++ main.c``
+
 ИЛИ
-g++ main.c -D STACK_DEBUG
+
+``g++ main.c -D STACK_DEBUG``
+
 для режима дебага. Затем:
-./a.exe
+
+``./a.exe``
 
 ## Основные функции стека
 
